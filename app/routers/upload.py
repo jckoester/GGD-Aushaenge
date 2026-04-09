@@ -18,7 +18,7 @@ ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "pdf"}
 async def upload_notice(
     file: UploadFile = File(...),
     publish_start: datetime = Form(...),
-    publish_end: datetime = Form(...),
+    publish_end: datetime | None = Form(default=None),
     db: Session = Depends(get_db),
 ):
     ext = Path(file.filename).suffix.lstrip(".").lower()
