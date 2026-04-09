@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Aktive Aushänge – GGD Aushaenge{% endblock %}
+
+{% block content %}
+<h1>Aktive Aushänge</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Vorschau</th>
+            <th>Dateiname</th>
+            <th class="col-type">Typ</th>
+            <th class="col-pages">Seiten</th>
+            <th>Zeitraum</th>
+            <th>Status</th>
+            <th>Aktionen</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Upload-Zeile -->
+        <tr class="upload-row" id="upload-row">
+            <td>
+                <input type="file" id="upload-file" accept=".jpg,.jpeg,.png,.pdf">
+            </td>
+            <td colspan="3">
+                <label>Start&nbsp;
+                    <input id="upload-start" type="text" placeholder="Startdatum">
+                </label>
+            </td>
+            <td>
+                <label>Ende&nbsp;
+                    <input id="upload-end" type="text" placeholder="Enddatum">
+                </label>
+                <label style="margin-top:0.3rem; display:block;">
+                    <input id="upload-permanent" type="checkbox"> Dauerhaft
+                </label>
+            </td>
+            <td></td>
+            <td>
+                <button id="upload-btn">Anlegen</button>
+            </td>
+        </tr>
+
+        <!-- Notice-Zeilen -->
+        {% for n in notices %}
+        {% if n.publish_start > now %}
+            {% set status = "geplant" %}
+        {% else %}
+            {% set status = "aktiv" %}
+        {% endif %}
+        <tr id="row-{{ n.id }}">
+            <td>
+                <img src="/files/{{ n.id }}/preview" alt="Vorschau" loading="lazy">
+            </td>
+            <td>{{ n.original_filename }}</td>
+            <td class="col-type">{{ n.file_type }}</td>
+            <td class="col-pages">{{ n.page_count }}</td>
+            <td>
+                {{ n.publish_start.strftime("%d.%m.%Y %H:%M") }}
+                –
+                {% if n.publish_end %}
+                    {{ n.publish_end.strftime("%d.%m.%Y %H:%M") }}
+                {% else %}
+                    dauerhaft
+                {% endif %}
+            </td>
+            <td>
+                {% if status == "aktiv" %}
+                    <span class="badge badge-active">aktiv</span>
+                {% else %}
+                    <span class="badge badge-planned">geplant</span>
+                {% endif %}
+            </td>
+            <td>
+                <button
+                    onclick="editNotice(
+                        {{ n.id }},
+                        '{{ n.publish_start.isoformat() }}',
+                        {{ ('\''+n.publish_end.isoformat()+'\'') if n.publish_end else 'null' }}
+                    )">Zeitraum bearbeiten</button>
+                <button
+                    class="btn-danger"
+                    onclick="endNotice({{ n.id }})">Beenden</button>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="7" style="text-align:center; color:#888; padding:1rem;">
+                Keine aktiven Aushänge.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Upload-Flatpickr
+const fpUploadConfig = {
+    enableTime: true,
+    time_24hr: true,
+    minuteIncrement: 15,
+    locale: "de",
+    dateFormat: "Y-m-dTH:i:S",
+    altInput: true,
+    altFormat: "d.m.Y H:i",
+};
+const fpUploadStart = flatpickr("#upload-start", fpUploadConfig);
+const fpUploadEnd   = flatpickr("#upload-end",   fpUploadConfig);
+
+document.getElementById("upload-permanent").addEventListener("change", function () {
+    const endInput = document.getElementById("upload-end");
+    const altInput = endInput.nextElementSibling;
+    const visible = !this.checked;
+    endInput.style.display = visible ? "" : "none";
+    if (altInput && altInput.classList.contains("flatpickr-input")) {
+        altInput.style.display = visible ? "" : "none";
+    }
+    if (this.checked) fpUploadEnd.clear();
+});
+
+document.getElementById("upload-btn").addEventListener("click", async function () {
+    const fileInput = document.getElementById("upload-file");
+    const startDate = fpUploadStart.latestSelectedDateObj;
+    const permanent = document.getElementById("upload-permanent").checked;
+    const endDate   = fpUploadEnd.latestSelectedDateObj;
+
+    if (!fileInput.files.length) { alert("Bitte eine Datei auswählen."); return; }
+    if (!startDate) { alert("Bitte ein Startdatum angeben."); return; }
+    if (!permanent && !endDate) { alert("Bitte ein Enddatum angeben oder 'Dauerhaft' wählen."); return; }
+
+    const toIso = d => d ? d.toISOString().slice(0, 19) : null;
+
+    const fd = new FormData();
+    fd.append("file", fileInput.files[0]);
+    fd.append("publish_start", toIso(startDate));
+    if (!permanent && endDate) fd.append("publish_end", toIso(endDate));
+
+    try {
+        await apiFetch("/upload/", { method: "POST", body: fd });
+        location.reload();
+    } catch (e) {
+        alert("Fehler beim Anlegen: " + e.message);
+    }
+});
+
+// Zeitraum bearbeiten
+function editNotice(id, startIso, endIso) {
+    openModal(
+        "Zeitraum bearbeiten",
+        startIso,
+        endIso,
+        async (newStart, newEnd) => {
+            try {
+                await apiFetch(`/upload/${id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ publish_start: newStart, publish_end: newEnd }),
+                });
+                location.reload();
+            } catch (e) {
+                alert("Fehler: " + e.message);
+            }
+        }
+    );
+}
+
+// Beenden
+async function endNotice(id) {
+    if (!confirm("Aushang jetzt beenden?")) return;
+    const now = new Date().toISOString().slice(0, 19);
+    try {
+        // Wir brauchen den aktuellen publish_start – holen wir ihn aus dem DOM
+        const row = document.getElementById("row-" + id);
+        const editBtn = row.querySelector("button[onclick^='editNotice']");
+        // publish_start ist 2. Argument des onclick-Aufrufs
+        const match = editBtn.getAttribute("onclick").match(/editNotice\(\s*\d+\s*,\s*'([^']+)'/);
+        const publishStart = match ? match[1] : now;
+        await apiFetch(`/upload/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ publish_start: publishStart, publish_end: now }),
+        });
+        location.reload();
+    } catch (e) {
+        alert("Fehler: " + e.message);
+    }
+}
+</script>
+{% endblock %}

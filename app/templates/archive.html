@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Archiv – GGD Aushaenge{% endblock %}
+
+{% block content %}
+<h1>Archiv</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>Vorschau</th>
+            <th>Dateiname</th>
+            <th class="col-type">Typ</th>
+            <th>War aktiv</th>
+            <th>Aktionen</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for n in notices %}
+        <tr id="row-{{ n.id }}">
+            <td>
+                <img src="/files/{{ n.id }}/preview" alt="Vorschau" loading="lazy">
+            </td>
+            <td>{{ n.original_filename }}</td>
+            <td class="col-type">{{ n.file_type }}</td>
+            <td>
+                {{ n.publish_start.strftime("%d.%m.%Y %H:%M") }}
+                –
+                {% if n.publish_end %}
+                    {{ n.publish_end.strftime("%d.%m.%Y %H:%M") }}
+                {% else %}
+                    dauerhaft
+                {% endif %}
+            </td>
+            <td>
+                <button
+                    onclick="republish(
+                        {{ n.id }},
+                        '{{ n.publish_start.isoformat() }}',
+                        {{ ('\''+n.publish_end.isoformat()+'\'') if n.publish_end else 'null' }}
+                    )">Erneut veröffentlichen</button>
+                <button
+                    class="btn-danger"
+                    onclick="deleteNotice({{ n.id }})">Löschen</button>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5" style="text-align:center; color:#888; padding:1rem;">
+                Archiv ist leer.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function republish(id, startIso, endIso) {
+    openModal(
+        "Erneut veröffentlichen",
+        startIso,
+        endIso,
+        async (newStart, newEnd) => {
+            try {
+                await apiFetch(`/archive/${id}/republish`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ publish_start: newStart, publish_end: newEnd }),
+                });
+                document.getElementById("row-" + id).remove();
+            } catch (e) {
+                alert("Fehler: " + e.message);
+            }
+        }
+    );
+}
+
+async function deleteNotice(id) {
+    if (!confirm("Aushang dauerhaft löschen?")) return;
+    try {
+        await apiFetch(`/archive/${id}`, { method: "DELETE" });
+        document.getElementById("row-" + id).remove();
+    } catch (e) {
+        alert("Fehler: " + e.message);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GGD Aushaenge{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/vendor/flatpickr.min.css">
+</head>
+<body>
+
+<nav>
+    <a href="/">Aushänge</a>
+    <a href="/archiv">Archiv</a>
+</nav>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Modales Overlay (geteilt für alle Views) -->
+<div id="modal" class="modal-backdrop hidden">
+    <div class="modal-box">
+        <h2 id="modal-title"></h2>
+        <label for="modal-start">Start</label>
+        <input id="modal-start" type="text">
+        <label id="modal-end-label" for="modal-end">Ende</label>
+        <input id="modal-end" type="text">
+        <label>
+            <input id="modal-permanent" type="checkbox"> Dauerhaft (kein Enddatum)
+        </label>
+        <div class="modal-actions">
+            <button id="modal-cancel">Abbrechen</button>
+            <button id="modal-submit">Speichern</button>
+        </div>
+    </div>
+</div>
+
+<script src="/static/vendor/flatpickr.min.js"></script>
+<script src="/static/vendor/de.js"></script>
+<script>
+// Flatpickr-Konfiguration
+const fpConfig = {
+    enableTime: true,
+    time_24hr: true,
+    minuteIncrement: 15,
+    locale: "de",
+    dateFormat: "Y-m-dTH:i:S",
+    altInput: true,
+    altFormat: "d.m.Y H:i",
+};
+
+const fpStart = flatpickr("#modal-start", fpConfig);
+const fpEnd   = flatpickr("#modal-end",   fpConfig);
+
+// Modal
+let _modalCallback = null;
+
+function openModal(title, startIso, endIso, onSubmit) {
+    document.getElementById("modal-title").textContent = title;
+    fpStart.setDate(startIso || null, false);
+    const permanent = !endIso;
+    document.getElementById("modal-permanent").checked = permanent;
+    setEndVisible(!permanent);
+    if (!permanent) {
+        fpEnd.setDate(endIso, false);
+    } else {
+        fpEnd.clear();
+    }
+    _modalCallback = onSubmit;
+    document.getElementById("modal").classList.remove("hidden");
+}
+
+function closeModal() {
+    document.getElementById("modal").classList.add("hidden");
+    _modalCallback = null;
+}
+
+function setEndVisible(visible) {
+    const endInput = document.getElementById("modal-end");
+    const endLabel = document.getElementById("modal-end-label");
+    // altInput erzeugt ein zweites Input – beide ein-/ausblenden
+    const altInput = endInput.nextElementSibling;
+    endLabel.style.display = visible ? "" : "none";
+    endInput.style.display = visible ? "" : "none";
+    if (altInput && altInput.classList.contains("flatpickr-input")) {
+        altInput.style.display = visible ? "" : "none";
+    }
+}
+
+document.getElementById("modal-permanent").addEventListener("change", function () {
+    setEndVisible(!this.checked);
+    if (this.checked) fpEnd.clear();
+});
+
+document.getElementById("modal-cancel").addEventListener("click", closeModal);
+
+document.getElementById("modal-submit").addEventListener("click", function () {
+    const startVal = fpStart.latestSelectedDateObj;
+    if (!startVal) {
+        alert("Bitte ein Startdatum angeben.");
+        return;
+    }
+    const permanent = document.getElementById("modal-permanent").checked;
+    const endVal = permanent ? null : fpEnd.latestSelectedDateObj;
+    if (!permanent && !endVal) {
+        alert("Bitte ein Enddatum angeben oder 'Dauerhaft' wählen.");
+        return;
+    }
+    const toIso = d => d ? d.toISOString().slice(0, 19) : null;
+    if (_modalCallback) _modalCallback(toIso(startVal), toIso(endVal));
+    closeModal();
+});
+
+// Klick auf Backdrop schließt Modal
+document.getElementById("modal").addEventListener("click", function (e) {
+    if (e.target === this) closeModal();
+});
+
+// Hilfsfunktion für API-Fehler
+async function apiFetch(url, options) {
+    const res = await fetch(url, options);
+    if (!res.ok) {
+        let msg = "Fehler " + res.status;
+        try { msg = (await res.json()).detail || msg; } catch (_) {}
+        throw new Error(msg);
+    }
+    return res;
+}
+</script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>
