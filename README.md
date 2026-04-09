@@ -2,6 +2,83 @@
 
 Webanwendung zur Verwaltung von digitalen Aushängen (Infoscreens).
 
+---
+
+## Voraussetzungen
+
+- Python 3.11+
+- `poppler-utils` (für PDF-Verarbeitung): `apt install poppler-utils`
+- Zugang zu einem WebDAV-Server
+- IServ-Installation mit OAuth2/OIDC-Unterstützung
+
+---
+
+## Installation
+
+```bash
+git clone <repo-url>
+cd GGD-Aushaenge
+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+---
+
+## Konfiguration
+
+`.env`-Datei im Projektverzeichnis anlegen:
+
+```env
+# Pflichtfelder
+SECRET_KEY=<langer zufälliger String, z.B. openssl rand -hex 32>
+WEBDAV_URL=https://<server>/webdav/<ordner>
+WEBDAV_USER=<benutzer>
+WEBDAV_PASSWORD=<passwort>
+
+# OIDC (IServ)
+OIDC_CLIENT_ID=<client-id>
+OIDC_CLIENT_SECRET=<client-secret>
+OIDC_SERVER_METADATA_URL=https://<iserv-domain>/.well-known/openid-configuration
+
+# Optional (Standardwerte)
+DATABASE_URL=sqlite:///./ggd_aushaenge.db
+UPLOAD_DIR=uploads
+PROCESSED_DIR=processed
+OIDC_REQUIRED_GROUP=Infobildschirme
+```
+
+### IServ OAuth2-Anwendung einrichten
+
+In IServ unter **Verwaltung → OAuth2-Anwendungen** eine neue Anwendung anlegen:
+
+- Redirect-URI: `https://<domain>/auth/callback`
+- Scopes: `openid`, `profile`, `email`, `groups`
+- Den generierten `client_id` und `client_secret` in die `.env` eintragen
+
+---
+
+## Datenbank initialisieren
+
+```bash
+source venv/bin/activate
+alembic upgrade head
+```
+
+---
+
+## Starten
+
+```bash
+source venv/bin/activate
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+Für den Produktionsbetrieb empfiehlt sich ein systemd-Service hinter nginx als Reverse Proxy.
+
+---
+
 ## Cron-Job einrichten
 
 Der Sync-Job gleicht die Datenbank mit dem WebDAV-Ordner ab. Er muss auf dem Server als Systemcron eingerichtet werden.
@@ -12,7 +89,7 @@ crontab -e
 
 Folgenden Eintrag hinzufügen (Pfade anpassen):
 
-```
+```cron
 */5 * * * * cd /pfad/zum/projekt && /pfad/zum/venv/bin/python sync.py >> /var/log/ggd-sync.log 2>&1
 ```
 
@@ -20,7 +97,7 @@ Das Intervall (hier 5 Minuten) ist nach Bedarf anpassbar.
 
 ### Was der Sync-Job tut
 
-- Dateien, die im WebDAV-Ordner liegen, aber keiner aktiven Notice zugeordnet sind → werden gelöscht
+- Dateien im WebDAV-Ordner ohne zugehörige aktive Notice → werden gelöscht
 - Notices, deren Veröffentlichungszeitraum abgelaufen ist → werden archiviert
 - Aktive Notices, deren Dateien noch nicht im WebDAV-Ordner liegen → werden hochgeladen
 
@@ -30,8 +107,4 @@ Das Intervall (hier 5 Minuten) ist nach Bedarf anpassbar.
 python sync.py
 ```
 
-Oder über die API (nützlich für Tests):
-
-```
-POST /sync/run
-```
+Oder über die Web-Oberfläche mit dem **Sync**-Button in der Navigation.
