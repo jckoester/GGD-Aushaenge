@@ -25,7 +25,7 @@ def run_sync() -> None:
         # Erwartete Dateinamen aller aktiven Notices in WebDAV
         active_webdav_names: set[str] = set()
         for notice in notices:
-            if notice.publish_start <= now < notice.publish_end:
+            if notice.publish_start <= now and (notice.publish_end is None or now < notice.publish_end):
                 base = Path(notice.stored_filename).stem
                 for i in range(1, notice.page_count + 1):
                     active_webdav_names.add(f"{base}_p{i:03d}.jpg")
@@ -37,7 +37,7 @@ def run_sync() -> None:
 
         # 2. Abgelaufene Notices archivieren
         for notice in notices:
-            if notice.publish_end <= now:
+            if notice.publish_end is not None and notice.publish_end <= now:
                 notice.archived = True
 
         # 3. Aktive Notices hochladen, falls noch nicht in WebDAV

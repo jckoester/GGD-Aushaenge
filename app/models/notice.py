@@ -11,7 +11,7 @@ class Notice(Base):
     stored_filename: Mapped[str] = mapped_column(String(255), unique=True)
     file_type: Mapped[str] = mapped_column(String(10))          # "jpg", "png", "pdf"
     publish_start: Mapped[datetime] = mapped_column(DateTime)
-    publish_end: Mapped[datetime] = mapped_column(DateTime)
+    publish_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     page_count: Mapped[int] = mapped_column(default=1)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
