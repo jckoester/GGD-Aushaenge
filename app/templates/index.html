@@ -38,7 +38,7 @@
             </td>
             <td></td>
             <td>
-                <button id="upload-btn">Anlegen</button>
+                <button id="upload-btn"><i data-lucide="plus"></i> Anlegen</button>
             </td>
         </tr>
 
@@ -78,10 +78,10 @@
                         {{ n.id }},
                         '{{ n.publish_start.isoformat() }}',
                         {{ ('\''+n.publish_end.isoformat()+'\'') if n.publish_end else 'null' }}
-                    )">Zeitraum bearbeiten</button>
+                    )"><i data-lucide="pencil"></i> Zeitraum</button>
                 <button
                     class="btn-danger"
-                    onclick="endNotice({{ n.id }})">Beenden</button>
+                    onclick="endNotice({{ n.id }})"><i data-lucide="square"></i> Beenden</button>
             </td>
         </tr>
         {% else %}

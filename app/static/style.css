@@ -17,14 +17,37 @@ nav {
     gap: 1.5rem;
 }
 
-nav a {
+nav a,
+.nav-btn {
     text-decoration: none;
     color: #0055aa;
     font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
 nav a:hover {
     text-decoration: underline;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.nav-btn:hover {
+    text-decoration: underline;
+    background: none;
+}
+
+.nav-btn:disabled {
+    color: #888;
+    cursor: default;
+    text-decoration: none;
 }
 
 main {
@@ -87,10 +110,19 @@ button {
     border: 1px solid #aaa;
     border-radius: 3px;
     background: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
 button:hover {
     background: #eee;
+}
+
+button svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
 }
 
 .btn-danger {

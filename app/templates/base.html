@@ -6,12 +6,16 @@
     <title>{% block title %}GGD Aushaenge{% endblock %}</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/vendor/flatpickr.min.css">
+    <script src="/static/vendor/lucide.min.js"></script>
 </head>
 <body>
 
 <nav>
-    <a href="/">Aushänge</a>
-    <a href="/archiv">Archiv</a>
+    <a href="/"><i data-lucide="layout-list"></i> Aushänge</a>
+    <a href="/archiv"><i data-lucide="archive"></i> Archiv</a>
+    <button id="nav-sync" class="nav-btn" title="Sync jetzt ausführen">
+        <i data-lucide="refresh-cw"></i> Sync
+    </button>
 </nav>
 
 <main>
@@ -173,6 +177,27 @@ async function apiFetch(url, options) {
     }
     return res;
 }
+
+// Sync-Button
+document.getElementById("nav-sync").addEventListener("click", async function () {
+    const btn = this;
+    btn.disabled = true;
+    btn.querySelector("i").setAttribute("data-lucide", "loader");
+    lucide.createIcons();
+    try {
+        await apiFetch("/sync/run", { method: "POST" });
+        await showAlert("Sync erfolgreich abgeschlossen.");
+        location.reload();
+    } catch (e) {
+        await showAlert("Sync fehlgeschlagen: " + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.querySelector("i").setAttribute("data-lucide", "refresh-cw");
+        lucide.createIcons();
+    }
+});
+
+lucide.createIcons();
 </script>
 
 {% block scripts %}{% endblock %}
