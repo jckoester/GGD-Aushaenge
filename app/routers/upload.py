@@ -83,6 +83,25 @@ def update_notice_dates(
     return notice
 
 
+@router.post("/{notice_id}/end", response_model=NoticeResponse)
+def end_notice(
+    notice_id: int,
+    db: Session = Depends(get_db),
+):
+    """Setzt publish_start und publish_end auf jetzt, um einen Aushang sofort zu beenden."""
+    notice = db.get(Notice, notice_id)
+    if not notice:
+        raise HTTPException(status_code=404, detail="Notice nicht gefunden.")
+    if notice.archived:
+        raise HTTPException(status_code=400, detail="Archivierte Notices können nicht bearbeitet werden.")
+    now = datetime.utcnow()
+    notice.publish_start = now
+    notice.publish_end = now
+    db.commit()
+    db.refresh(notice)
+    return notice
+
+
 @router.get("/", response_model=list[NoticeResponse])
 def list_notices(db: Session = Depends(get_db)):
     return (
