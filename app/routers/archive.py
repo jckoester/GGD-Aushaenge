@@ -1,12 +1,13 @@
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from app.auth import require_auth_dep
 from app.config import get_settings
 from app.database import get_db
 from app.models.notice import Notice
 from app.schemas.notice import NoticeCreate, NoticeResponse
 
-router = APIRouter(prefix="/archive", tags=["archive"])
+router = APIRouter(prefix="/archive", tags=["archive"], dependencies=[Depends(require_auth_dep)])
 
 
 @router.get("/", response_model=list[NoticeResponse])

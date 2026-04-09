@@ -7,9 +7,10 @@ from app.config import get_settings
 from app.database import get_db
 from app.models.notice import Notice
 from app.schemas.notice import NoticeCreate, NoticeResponse, NoticeUpdate
+from app.auth import require_auth_dep
 from app.services.image import process_upload
 
-router = APIRouter(prefix="/upload", tags=["upload"])
+router = APIRouter(prefix="/upload", tags=["upload"], dependencies=[Depends(require_auth_dep)])
 settings = get_settings()
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "pdf"}

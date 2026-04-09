@@ -18,9 +18,15 @@
             <i data-lucide="refresh-cw"></i> Sync
         </button>
     </div>
-    <div class="nav-brand">
-        <span>GGD Aushänge</span>
-        <img src="/static/logo.jpg" alt="Logo">
+    <div class="nav-right">
+        {% if user %}
+        <span class="nav-user"><i data-lucide="user"></i> {{ user.name }}</span>
+        <a href="/logout" class="nav-btn"><i data-lucide="log-out"></i> Abmelden</a>
+        {% endif %}
+        <div class="nav-brand">
+            <span>GGD Aushänge</span>
+            <img src="/static/logo.jpg" alt="Logo">
+        </div>
     </div>
 </nav>
 

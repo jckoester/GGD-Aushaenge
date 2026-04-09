@@ -24,6 +24,20 @@ nav {
     gap: 1.5rem;
 }
 
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+    color: #555;
+}
+
 .nav-brand {
     display: flex;
     align-items: center;

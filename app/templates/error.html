@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Zugriff verweigert – GGD Aushaenge{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; margin: 3rem auto; text-align: center;">
+    <i data-lucide="shield-x" style="width:48px; height:48px; color:#c00;"></i>
+    <h1 style="margin-top: 1rem;">Zugriff verweigert</h1>
+    <p style="color: #555;">{{ message }}</p>
+    <a href="/logout"><i data-lucide="log-out"></i> Abmelden</a>
+</div>
+{% endblock %}

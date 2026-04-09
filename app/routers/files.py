@@ -2,11 +2,12 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from app.auth import require_auth_dep
 from app.config import get_settings
 from app.database import get_db
 from app.models.notice import Notice
 
-router = APIRouter(prefix="/files", tags=["files"])
+router = APIRouter(prefix="/files", tags=["files"], dependencies=[Depends(require_auth_dep)])
 
 
 @router.get("/{notice_id}/preview", response_class=FileResponse)

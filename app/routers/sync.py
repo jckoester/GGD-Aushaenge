@@ -1,8 +1,10 @@
 import subprocess
 import sys
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
-router = APIRouter(prefix="/sync", tags=["sync"])
+from app.auth import require_auth_dep
+
+router = APIRouter(prefix="/sync", tags=["sync"], dependencies=[Depends(require_auth_dep)])
 
 
 @router.post("/run", status_code=200)
