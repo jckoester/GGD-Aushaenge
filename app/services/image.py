@@ -5,12 +5,15 @@ TARGET_W, TARGET_H = 3840, 2160
 
 
 def _letterbox(img: Image.Image) -> Image.Image:
-    """Skaliert img auf 4K-Canvas mit schwarzem Hintergrund, kein Crop."""
+    """Skaliert img maximal auf 4K-Canvas mit schwarzem Hintergrund, kein Crop."""
     canvas = Image.new("RGB", (TARGET_W, TARGET_H), (0, 0, 0))
     img = img.convert("RGB")
-    img.thumbnail((TARGET_W, TARGET_H), Image.LANCZOS)
-    x = (TARGET_W - img.width) // 2
-    y = (TARGET_H - img.height) // 2
+    scale = min(TARGET_W / img.width, TARGET_H / img.height)
+    new_w = round(img.width * scale)
+    new_h = round(img.height * scale)
+    img = img.resize((new_w, new_h), Image.LANCZOS)
+    x = (TARGET_W - new_w) // 2
+    y = (TARGET_H - new_h) // 2
     canvas.paste(img, (x, y))
     return canvas
 
