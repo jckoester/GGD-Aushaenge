@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.database import get_db
 from app.models.notice import Notice
-from app.schemas.notice import NoticeCreate, NoticeResponse
+from app.schemas.notice import NoticeCreate, NoticeResponse, NoticeUpdate
 from app.services.image import process_upload
 
 router = APIRouter(prefix="/upload", tags=["upload"])
@@ -63,6 +63,24 @@ async def upload_notice(
     db.commit()
     db.refresh(db_notice)
     return db_notice
+
+
+@router.patch("/{notice_id}", response_model=NoticeResponse)
+def update_notice_dates(
+    notice_id: int,
+    data: NoticeUpdate,
+    db: Session = Depends(get_db),
+):
+    notice = db.get(Notice, notice_id)
+    if not notice:
+        raise HTTPException(status_code=404, detail="Notice nicht gefunden.")
+    if notice.archived:
+        raise HTTPException(status_code=400, detail="Archivierte Notices können nicht bearbeitet werden.")
+    notice.publish_start = data.publish_start
+    notice.publish_end = data.publish_end
+    db.commit()
+    db.refresh(notice)
+    return notice
 
 
 @router.get("/", response_model=list[NoticeResponse])

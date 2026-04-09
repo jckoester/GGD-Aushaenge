@@ -11,6 +11,17 @@ class NoticeCreate(BaseModel):
             raise ValueError("publish_end muss nach publish_start liegen")
         return self
 
+class NoticeUpdate(BaseModel):
+    publish_start: datetime
+    publish_end: datetime
+
+    @model_validator(mode="after")
+    def end_after_start(self) -> "NoticeUpdate":
+        if self.publish_end <= self.publish_start:
+            raise ValueError("publish_end muss nach publish_start liegen")
+        return self
+
+
 class NoticeResponse(BaseModel):
     id: int
     original_filename: str
