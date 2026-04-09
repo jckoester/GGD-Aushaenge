@@ -71,19 +71,19 @@ function republish(id, startIso, endIso) {
                 });
                 document.getElementById("row-" + id).remove();
             } catch (e) {
-                alert("Fehler: " + e.message);
+                await showAlert("Fehler: " + e.message);
             }
         }
     );
 }
 
 async function deleteNotice(id) {
-    if (!confirm("Aushang dauerhaft löschen?")) return;
+    if (!await showConfirm("Aushang dauerhaft löschen?")) return;
     try {
         await apiFetch(`/archive/${id}`, { method: "DELETE" });
         document.getElementById("row-" + id).remove();
     } catch (e) {
-        alert("Fehler: " + e.message);
+        await showAlert("Fehler: " + e.message);
     }
 }
 </script>

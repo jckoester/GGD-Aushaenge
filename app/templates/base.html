@@ -18,6 +18,17 @@
     {% block content %}{% endblock %}
 </main>
 
+<!-- Einfacher Alert/Confirm-Dialog -->
+<div id="dialog" class="modal-backdrop hidden">
+    <div class="modal-box dialog-box">
+        <p id="dialog-msg"></p>
+        <div class="modal-actions">
+            <button id="dialog-cancel" class="hidden">Abbrechen</button>
+            <button id="dialog-ok">OK</button>
+        </div>
+    </div>
+</div>
+
 <!-- Modales Overlay (geteilt für alle Views) -->
 <div id="modal" class="modal-backdrop hidden">
     <div class="modal-box">
@@ -95,16 +106,16 @@ document.getElementById("modal-permanent").addEventListener("change", function (
 
 document.getElementById("modal-cancel").addEventListener("click", closeModal);
 
-document.getElementById("modal-submit").addEventListener("click", function () {
+document.getElementById("modal-submit").addEventListener("click", async function () {
     const startVal = fpStart.latestSelectedDateObj;
     if (!startVal) {
-        alert("Bitte ein Startdatum angeben.");
+        await showAlert("Bitte ein Startdatum angeben.");
         return;
     }
     const permanent = document.getElementById("modal-permanent").checked;
     const endVal = permanent ? null : fpEnd.latestSelectedDateObj;
     if (!permanent && !endVal) {
-        alert("Bitte ein Enddatum angeben oder 'Dauerhaft' wählen.");
+        await showAlert("Bitte ein Enddatum angeben oder 'Dauerhaft' wählen.");
         return;
     }
     const toIso = d => d ? d.toISOString().slice(0, 19) : null;
@@ -116,6 +127,41 @@ document.getElementById("modal-submit").addEventListener("click", function () {
 document.getElementById("modal").addEventListener("click", function (e) {
     if (e.target === this) closeModal();
 });
+
+// Alert / Confirm-Dialoge
+function showAlert(msg) {
+    return new Promise(resolve => {
+        document.getElementById("dialog-msg").textContent = msg;
+        document.getElementById("dialog-cancel").classList.add("hidden");
+        const ok = document.getElementById("dialog-ok");
+        const dlg = document.getElementById("dialog");
+        const handler = () => { ok.removeEventListener("click", handler); dlg.classList.add("hidden"); resolve(); };
+        ok.addEventListener("click", handler);
+        dlg.classList.remove("hidden");
+    });
+}
+
+function showConfirm(msg) {
+    return new Promise(resolve => {
+        document.getElementById("dialog-msg").textContent = msg;
+        const cancel = document.getElementById("dialog-cancel");
+        const ok = document.getElementById("dialog-ok");
+        const dlg = document.getElementById("dialog");
+        cancel.classList.remove("hidden");
+        const cleanup = (result) => {
+            ok.removeEventListener("click", onOk);
+            cancel.removeEventListener("click", onCancel);
+            cancel.classList.add("hidden");
+            dlg.classList.add("hidden");
+            resolve(result);
+        };
+        const onOk = () => cleanup(true);
+        const onCancel = () => cleanup(false);
+        ok.addEventListener("click", onOk);
+        cancel.addEventListener("click", onCancel);
+        dlg.classList.remove("hidden");
+    });
+}
 
 // Hilfsfunktion für API-Fehler
 async function apiFetch(url, options) {

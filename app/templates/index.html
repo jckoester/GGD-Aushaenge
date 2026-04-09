@@ -127,9 +127,9 @@ document.getElementById("upload-btn").addEventListener("click", async function (
     const permanent = document.getElementById("upload-permanent").checked;
     const endDate   = fpUploadEnd.latestSelectedDateObj;
 
-    if (!fileInput.files.length) { alert("Bitte eine Datei auswählen."); return; }
-    if (!startDate) { alert("Bitte ein Startdatum angeben."); return; }
-    if (!permanent && !endDate) { alert("Bitte ein Enddatum angeben oder 'Dauerhaft' wählen."); return; }
+    if (!fileInput.files.length) { await showAlert("Bitte eine Datei auswählen."); return; }
+    if (!startDate) { await showAlert("Bitte ein Startdatum angeben."); return; }
+    if (!permanent && !endDate) { await showAlert("Bitte ein Enddatum angeben oder 'Dauerhaft' wählen."); return; }
 
     const toIso = d => d ? d.toISOString().slice(0, 19) : null;
 
@@ -142,7 +142,7 @@ document.getElementById("upload-btn").addEventListener("click", async function (
         await apiFetch("/upload/", { method: "POST", body: fd });
         location.reload();
     } catch (e) {
-        alert("Fehler beim Anlegen: " + e.message);
+        await showAlert("Fehler beim Anlegen: " + e.message);
     }
 });
 
@@ -161,7 +161,7 @@ function editNotice(id, startIso, endIso) {
                 });
                 location.reload();
             } catch (e) {
-                alert("Fehler: " + e.message);
+                await showAlert("Fehler: " + e.message);
             }
         }
     );
@@ -169,7 +169,7 @@ function editNotice(id, startIso, endIso) {
 
 // Beenden
 async function endNotice(id) {
-    if (!confirm("Aushang jetzt beenden?")) return;
+    if (!await showConfirm("Aushang jetzt beenden?")) return;
     const now = new Date().toISOString().slice(0, 19);
     try {
         // Wir brauchen den aktuellen publish_start – holen wir ihn aus dem DOM
@@ -185,7 +185,7 @@ async function endNotice(id) {
         });
         location.reload();
     } catch (e) {
-        alert("Fehler: " + e.message);
+        await showAlert("Fehler: " + e.message);
     }
 }
 </script>

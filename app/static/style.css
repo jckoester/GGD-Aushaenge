@@ -168,6 +168,16 @@ label {
     margin-top: 0.8rem;
 }
 
+.dialog-box {
+    max-width: 320px;
+    gap: 0;
+}
+
+.dialog-box p {
+    margin: 0 0 1rem 0;
+    line-height: 1.4;
+}
+
 /* Responsive: hide less important columns on small screens */
 @media (max-width: 768px) {
     .col-type,
