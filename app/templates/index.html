@@ -80,7 +80,7 @@
                         {{ ('\''+n.publish_end.isoformat()+'\'') if n.publish_end else 'null' }}
                     )"><i data-lucide="pencil"></i> Zeitraum</button>
                 <button
-                    class="btn-danger"
+                    class="btn-danger btn-space-top"
                     onclick="endNotice({{ n.id }})"><i data-lucide="square"></i> Beenden</button>
             </td>
         </tr>
@@ -170,19 +170,8 @@ function editNotice(id, startIso, endIso) {
 // Beenden
 async function endNotice(id) {
     if (!await showConfirm("Aushang jetzt beenden?")) return;
-    const now = new Date().toISOString().slice(0, 19);
     try {
-        // Wir brauchen den aktuellen publish_start – holen wir ihn aus dem DOM
-        const row = document.getElementById("row-" + id);
-        const editBtn = row.querySelector("button[onclick^='editNotice']");
-        // publish_start ist 2. Argument des onclick-Aufrufs
-        const match = editBtn.getAttribute("onclick").match(/editNotice\(\s*\d+\s*,\s*'([^']+)'/);
-        const publishStart = match ? match[1] : now;
-        await apiFetch(`/upload/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ publish_start: publishStart, publish_end: now }),
-        });
+        await apiFetch(`/upload/${id}/end`, { method: "POST" });
         location.reload();
     } catch (e) {
         await showAlert("Fehler: " + e.message);

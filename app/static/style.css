@@ -14,7 +14,31 @@ nav {
     border-bottom: 1px solid #ddd;
     padding: 0.6rem 1.2rem;
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
     gap: 1.5rem;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.nav-brand img {
+    height: 32px;
+    width: auto;
+}
+
+.nav-brand span {
+    font-weight: 600;
+    font-size: 1rem;
+    /*color: #1a3a6b;*/
 }
 
 nav a,
@@ -80,7 +104,7 @@ td {
 }
 
 td img {
-    width: 80px;
+    width: 120px;
     height: auto;
     display: block;
 }
@@ -119,12 +143,15 @@ button:hover {
     background: #eee;
 }
 
-button svg {
-    width: 14px;
-    height: 14px;
+button svg,
+a svg {
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
 }
-
+.btn-space-top {
+    margin-top: 0.3rem;
+}
 .btn-danger {
     border-color: #c00;
     color: #c00;
@@ -132,6 +159,19 @@ button svg {
 
 .btn-danger:hover {
     background: #fee;
+}
+
+.btn-success {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.btn-success:hover {
+    background: #e6f4ea;
+}   
+
+.hidden{
+    visibility: hidden;
 }
 
 .upload-row td {
