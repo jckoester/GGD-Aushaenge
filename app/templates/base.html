@@ -181,19 +181,19 @@ async function apiFetch(url, options) {
 // Sync-Button
 document.getElementById("nav-sync").addEventListener("click", async function () {
     const btn = this;
+    const original = btn.innerHTML;
     btn.disabled = true;
-    btn.querySelector("i").setAttribute("data-lucide", "loader");
-    lucide.createIcons();
+    btn.innerHTML = '<i data-lucide="loader-circle"></i> Läuft…';
+    lucide.createIcons({ nodes: [btn] });
     try {
         await apiFetch("/sync/run", { method: "POST" });
         await showAlert("Sync erfolgreich abgeschlossen.");
         location.reload();
     } catch (e) {
-        await showAlert("Sync fehlgeschlagen: " + e.message);
-    } finally {
+        btn.innerHTML = original;
+        lucide.createIcons({ nodes: [btn] });
         btn.disabled = false;
-        btn.querySelector("i").setAttribute("data-lucide", "refresh-cw");
-        lucide.createIcons();
+        await showAlert("Sync fehlgeschlagen: " + e.message);
     }
 });
 
