@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic-settings
+sqlalchemy
+alembic
+python-multipart
+Pillow
+pdf2image
+webdavclient3
+authlib
+httpx
+jinja2
+python-dotenv
