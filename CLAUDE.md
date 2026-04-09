@@ -12,10 +12,11 @@ This is a web application for managing digital signage content ("Aushaenge" = no
 2. Datenbankmodell + Datei-Upload
 3. Bildverarbeitung (Skalierung auf 4K)
 4. WebDAV-Sync + Cron-Job
-5. Archiv-Funktionen (auch Löschen aktiver Aushänge)
-6. Frontend
-7. OIDC-Login mit IServ + Gruppenprüfung
-8. Optimierungen:
+5. Archiv-Funktionen
+6. Löschenfunktion für aktiver Aushänge (-> Archiv)
+7. Frontend
+8. OIDC-Login mit IServ + Gruppenprüfung
+9. Optimierungen:
     - dauerhafte AUshänge ohne Ablaufdatum
 
 Der OIDC-Login wird zuletzt implementiert, da für Tests eine Domain benötigt wird, die noch nicht verfügbar ist. Bis dahin ist die Anwendung ohne Authentifizierung zugänglich.
