@@ -46,7 +46,7 @@ OIDC_SERVER_METADATA_URL=https://<iserv-domain>/.well-known/openid-configuration
 DATABASE_URL=sqlite:///./ggd_aushaenge.db
 UPLOAD_DIR=uploads
 PROCESSED_DIR=processed
-OIDC_REQUIRED_GROUP=Infobildschirme
+OIDC_REQUIRED_GROUP=infobildschirm
 ```
 
 ### IServ OAuth2-Anwendung einrichten
@@ -98,7 +98,7 @@ User=www-data
 Group=www-data
 WorkingDirectory=/pfad/zum/projekt
 EnvironmentFile=/pfad/zum/projekt/.env
-ExecStart=/pfad/zum/projekt/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+ExecStart=/pfad/zum/projekt/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips=127.0.0.1
 Restart=on-failure
 RestartSec=5
 

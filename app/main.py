@@ -54,8 +54,9 @@ async def auth_callback(request: Request):
     oauth = get_oauth()
     token = await oauth.iserv.authorize_access_token(request)
     userinfo = token.get("userinfo") or await oauth.iserv.userinfo(token=token)
-    groups = userinfo.get("groups", [])
-    if settings.oidc_required_group not in groups:
+    groups = userinfo.get("groups", {})
+    group_acts = {g["act"] for g in groups.values() if isinstance(g, dict) and "act" in g}
+    if settings.oidc_required_group not in group_acts:
         return templates.TemplateResponse(
             request,
             "error.html",
