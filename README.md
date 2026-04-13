@@ -79,6 +79,49 @@ Für den Produktionsbetrieb empfiehlt sich ein systemd-Service hinter nginx als 
 
 ---
 
+## systemd-Service einrichten
+
+Service-Datei anlegen (Pfade ggf. anpassen):
+
+```bash
+sudo nano /etc/systemd/system/ggd-aushaenge.service
+```
+
+```ini
+[Unit]
+Description=GGD Aushaenge – Digitale Aushänge Verwaltung
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/pfad/zum/projekt
+EnvironmentFile=/pfad/zum/projekt/.env
+ExecStart=/pfad/zum/projekt/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Service aktivieren und starten:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable ggd-aushaenge
+sudo systemctl start ggd-aushaenge
+```
+
+Status prüfen:
+
+```bash
+sudo systemctl status ggd-aushaenge
+```
+
+---
+
 ## Cron-Job einrichten
 
 Der Sync-Job gleicht die Datenbank mit dem WebDAV-Ordner ab. Er muss auf dem Server als Systemcron eingerichtet werden.
