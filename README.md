@@ -72,7 +72,7 @@ alembic upgrade head
 
 ```bash
 source venv/bin/activate
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=<PROXY_IP>
 ```
 
 Für den Produktionsbetrieb empfiehlt sich ein systemd-Service hinter nginx als Reverse Proxy.
@@ -98,7 +98,7 @@ User=www-data
 Group=www-data
 WorkingDirectory=/pfad/zum/projekt
 EnvironmentFile=/pfad/zum/projekt/.env
-ExecStart=/pfad/zum/projekt/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips=127.0.0.1
+ExecStart=/pfad/zum/projekt/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=<PROXY_IP>
 Restart=on-failure
 RestartSec=5
 
