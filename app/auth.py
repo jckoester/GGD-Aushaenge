@@ -5,6 +5,7 @@ from fastapi.responses import RedirectResponse
 from app.config import get_settings
 
 oauth = OAuth()
+_DEV_USER = {"name": "Dev User", "email": "dev@localhost"}
 _oauth_registered = False
 
 
@@ -24,10 +25,9 @@ def get_oauth() -> OAuth:
 
 
 def require_auth(request: Request):
-    """Für HTML-Routen: leitet zu /login um, falls nicht eingeloggt.
-    Rückgabe ist entweder ein RedirectResponse oder das user-Dict.
-    Aufruf: auth = require_auth(request); if isinstance(auth, RedirectResponse): return auth
-    """
+    """Für HTML-Routen: leitet zu /login um, falls nicht eingeloggt."""
+    if get_settings().dev_mode:
+        return _DEV_USER
     user = request.session.get("user")
     if not user:
         return RedirectResponse(url="/login")
@@ -36,5 +36,7 @@ def require_auth(request: Request):
 
 def require_auth_dep(request: Request):
     """Für API-Router: wirft HTTP 401, falls nicht eingeloggt."""
+    if get_settings().dev_mode:
+        return
     if not request.session.get("user"):
         raise HTTPException(status_code=401, detail="Nicht eingeloggt.")

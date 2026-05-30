@@ -44,6 +44,9 @@ app.include_router(files.router)
 
 @app.get("/login")
 async def login(request: Request):
+    if settings.dev_mode:
+        request.session["user"] = {"name": "Dev User", "email": "dev@localhost"}
+        return RedirectResponse(url="/")
     oauth = get_oauth()
     redirect_uri = request.url_for("auth_callback")
     return await oauth.iserv.authorize_redirect(request, redirect_uri)

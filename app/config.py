@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     oidc_client_secret: str = ""
     oidc_server_metadata_url: str = ""
     oidc_required_group: str = "Infobildschirme"
+    dev_mode: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

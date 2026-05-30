@@ -47,6 +47,27 @@ DATABASE_URL=sqlite:///./ggd_aushaenge.db
 UPLOAD_DIR=uploads
 PROCESSED_DIR=processed
 OIDC_REQUIRED_GROUP=infobildschirm
+
+# Lokaler Entwicklungsmodus – Login-Zwang deaktivieren (niemals auf dem Produktionsserver setzen!)
+# DEV_MODE=true
+```
+
+#### Entwicklungsmodus (`DEV_MODE`)
+
+Mit `DEV_MODE=true` wird der OIDC-Login vollständig überbrückt: Die App läuft
+ohne erreichbaren IServ-Provider und meldet automatisch einen synthetischen
+Testnutzer an. `GET /login` schreibt diesen direkt in die Session und leitet
+auf `/` weiter.
+
+Im Entwicklungsmodus können die OIDC-Variablen leer bleiben. Für WebDAV
+genügen Dummy-Werte, falls kein lokaler Server vorhanden ist:
+
+```env
+DEV_MODE=true
+SECRET_KEY=dev-secret
+WEBDAV_URL=http://localhost:5005/
+WEBDAV_USER=dev
+WEBDAV_PASSWORD=dev
 ```
 
 ### IServ OAuth2-Anwendung einrichten
