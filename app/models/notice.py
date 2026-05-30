@@ -15,3 +15,5 @@ class Notice(Base):
     page_count: Mapped[int] = mapped_column(default=1)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    source: Mapped[str] = mapped_column(String(10), default="user")
+    external_id: Mapped[str | None] = mapped_column(String(512), unique=True, nullable=True)

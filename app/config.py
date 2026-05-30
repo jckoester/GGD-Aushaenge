@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     oidc_server_metadata_url: str = ""
     oidc_required_group: str = "Infobildschirme"
     dev_mode: bool = False
+    rss_feed_url: str = "https://gymnasium-ditzingen.de/iserv/public/news/rss/1"
+    rss_enabled: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

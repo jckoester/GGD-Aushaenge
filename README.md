@@ -7,7 +7,7 @@ Webanwendung zur Verwaltung von digitalen Aushängen (Infoscreens).
 ## Voraussetzungen
 
 - Python 3.11+
-- `poppler-utils` (für PDF-Verarbeitung): `apt install poppler-utils`
+- `poppler-utils` und `fonts-dejavu-core` (für PDF- und Text-Rendering): `apt install poppler-utils fonts-dejavu-core`
 - Zugang zu einem WebDAV-Server
 - IServ-Installation mit OAuth2/OIDC-Unterstützung
 

@@ -1,14 +1,59 @@
-from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+# Step 11 / Teil 2: Rendering – Font-Helper und `render_news()`
 
-TARGET_W, TARGET_H = 3840, 2160
+Voraussetzung: Teil 1 ist abgeschlossen (Modell und Config vorhanden).
 
+Alle Änderungen in diesem Teil betreffen ausschließlich
+`app/services/image.py`. Die bestehenden Funktionen (`_letterbox`,
+`process_raster`, `process_pdf`, `process_upload`) bleiben **unverändert**.
+
+---
+
+## 1. Font-Ressource vorbereiten
+
+Verzeichnis `app/fonts/` anlegen und eine `.gitkeep`-Datei hineinstellen
+(damit das leere Verzeichnis ins Repo eingecheckt werden kann).
+
+Im README und in der Serverdokumentation `fonts-dejavu-core` als neue
+System-Voraussetzung ergänzen:
+
+```
+apt install poppler-utils fonts-dejavu-core
+```
+
+Alternativ kann man die Fontdateien manuell nach `app/fonts/` kopieren:
+- `DejaVuSans.ttf`
+- `DejaVuSans-Bold.ttf`
+
+---
+
+## 2. Neue Imports in `app/services/image.py`
+
+Am Anfang der Datei ergänzen:
+
+```python
+from PIL import ImageDraw, ImageFont
+```
+
+(Der `Image`-Import ist bereits vorhanden.)
+
+---
+
+## 3. Konstanten
+
+Direkt nach den bestehenden Konstanten (`TARGET_W`, `TARGET_H`) einfügen:
+
+```python
 _BG_COLOR    = (20, 30, 48)       # Dunkles Nachtblau
 _TITLE_COLOR = (255, 255, 255)
 _TEXT_COLOR  = (200, 210, 220)
 _PAD         = 240                # Innenabstand in Pixeln
+```
 
+---
 
+## 4. `_find_font(bold=False) -> Path`
+
+```python
 def _find_font(bold: bool = False) -> Path:
     name = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
     candidates = [
@@ -23,8 +68,13 @@ def _find_font(bold: bool = False) -> Path:
         f"{name} nicht gefunden. Bitte 'apt install fonts-dejavu-core' "
         "ausführen oder Fonts nach app/fonts/ kopieren."
     )
+```
 
+---
 
+## 5. `_wrap_lines(text, font, max_width) -> list[str]`
+
+```python
 def _wrap_lines(text: str, font, max_width: int) -> list[str]:
     words = text.split()
     lines: list[str] = []
@@ -39,8 +89,15 @@ def _wrap_lines(text: str, font, max_width: int) -> list[str]:
     if current:
         lines.append(" ".join(current))
     return lines
+```
 
+---
 
+## 6. `_draw_text_block(canvas, title, body, area_box)`
+
+Rendert Titel und Fließtext in eine Bounding-Box `(x0, y0, x1, y1)`.
+
+```python
 def _draw_text_block(
     canvas: Image.Image,
     title: str,
@@ -68,32 +125,31 @@ def _draw_text_block(
         for line in _wrap_lines(body, body_font, max_w):
             draw.text((x0 + _PAD, y), line, font=body_font, fill=_TEXT_COLOR)
             y += 85
+```
 
+---
 
-def _letterbox(img: Image.Image) -> Image.Image:
-    """Skaliert img maximal auf 4K-Canvas mit schwarzem Hintergrund, kein Crop."""
-    canvas = Image.new("RGB", (TARGET_W, TARGET_H), (0, 0, 0))
-    img = img.convert("RGB")
-    scale = min(TARGET_W / img.width, TARGET_H / img.height)
-    new_w = round(img.width * scale)
-    new_h = round(img.height * scale)
-    img = img.resize((new_w, new_h), Image.LANCZOS)
-    x = (TARGET_W - new_w) // 2
-    y = (TARGET_H - new_h) // 2
-    canvas.paste(img, (x, y))
-    return canvas
+## 7. Seiten-Render-Hilfsfunktionen
 
+### `_page_text_only`
 
+```python
 def _page_text_only(title: str, body: str) -> Image.Image:
     canvas = Image.new("RGB", (TARGET_W, TARGET_H), _BG_COLOR)
     _draw_text_block(canvas, title, body, (0, 0, TARGET_W, TARGET_H))
     return canvas
+```
 
+### `_page_image_only`
 
+```python
 def _page_image_only(img: Image.Image) -> Image.Image:
     return _letterbox(img)
+```
 
+### `_page_landscape_split` (Bild oben 60 %, Text unten 40 %)
 
+```python
 def _page_landscape_split(img: Image.Image, title: str, body: str) -> Image.Image:
     canvas = Image.new("RGB", (TARGET_W, TARGET_H), _BG_COLOR)
     split_y = int(TARGET_H * 0.60)   # 1296 px
@@ -111,8 +167,11 @@ def _page_landscape_split(img: Image.Image, title: str, body: str) -> Image.Imag
     # Text unten
     _draw_text_block(canvas, title, body, (0, split_y, TARGET_W, TARGET_H))
     return canvas
+```
 
+### `_page_portrait_split` (Text links 50 %, Bild rechts 50 %)
 
+```python
 def _page_portrait_split(img: Image.Image, title: str, body: str) -> Image.Image:
     canvas = Image.new("RGB", (TARGET_W, TARGET_H), _BG_COLOR)
     split_x = TARGET_W // 2   # 1920 px
@@ -131,8 +190,13 @@ def _page_portrait_split(img: Image.Image, title: str, body: str) -> Image.Image
     canvas.paste(sub, (split_x, 0))
 
     return canvas
+```
 
+---
 
+## 8. Hauptfunktion `render_news()`
+
+```python
 def render_news(
     title: str,
     body_text: str,
@@ -166,38 +230,45 @@ def render_news(
         page.save(out, "JPEG", quality=92)
 
     return len(pages)
+```
 
+---
 
-def process_raster(src: Path, dest_dir: Path, base_name: str) -> int:
-    """Verarbeitet eine JPEG/PNG-Datei → eine 4K-JPEG-Datei.
-    Gibt die Seitenanzahl zurück (immer 1).
-    """
-    with Image.open(src) as img:
-        result = _letterbox(img)
-    out_path = dest_dir / f"{base_name}_p001.jpg"
-    result.save(out_path, "JPEG", quality=92)
-    return 1
+## Verifikation dieses Teils
 
+Schnelltest ohne laufende App (fonts-dejavu-core oder Fonts in app/fonts/ vorausgesetzt):
 
-def process_pdf(src: Path, dest_dir: Path, base_name: str) -> int:
-    """Konvertiert jede PDF-Seite in eine 4K-JPEG-Datei.
-    Gibt die Seitenanzahl zurück.
-    """
-    from pdf2image import convert_from_path
+```python
+from pathlib import Path
+from PIL import Image
+from app.services.image import render_news
 
-    pages = convert_from_path(str(src), dpi=150)
-    for i, page in enumerate(pages, start=1):
-        result = _letterbox(page)
-        out_path = dest_dir / f"{base_name}_p{i:03d}.jpg"
-        result.save(out_path, "JPEG", quality=92)
-    return len(pages)
+dest = Path("processed")
+dest.mkdir(exist_ok=True)
 
+# Text-only
+n = render_news("Testtitel", "Das ist ein Testtext.", [], dest, "test_text")
+assert n == 1
 
-def process_upload(src: Path, dest_dir: Path, base_name: str, file_type: str) -> int:
-    """Dispatcher: wählt die richtige Verarbeitungsfunktion anhand des Dateityps.
-    Gibt die Seitenanzahl zurück.
-    """
-    if file_type == "pdf":
-        return process_pdf(src, dest_dir, base_name)
-    else:
-        return process_raster(src, dest_dir, base_name)
+# Bild-only (Querformat)
+img_quer = Image.new("RGB", (1920, 1080), (100, 150, 200))
+n = render_news("Nur Bild", "", [img_quer], dest, "test_img_quer")
+assert n == 1
+
+# Text + Querformat-Bild
+n = render_news("Titel", "Fließtext hier.", [img_quer], dest, "test_split_quer")
+assert n == 1
+
+# Text + Hochformat-Bild
+img_hoch = Image.new("RGB", (1080, 1920), (200, 100, 150))
+n = render_news("Titel", "Fließtext hier.", [img_hoch], dest, "test_split_hoch")
+assert n == 1
+
+# Mehrere Bilder + Text → 3 Seiten (1 Text + 2 Bilder)
+n = render_news("Titel", "Text.", [img_quer, img_hoch], dest, "test_multi")
+assert n == 3
+
+print("Alle Rendering-Tests bestanden.")
+```
+
+Alle erzeugten JPEGs müssen 3840×2160 px groß sein.
