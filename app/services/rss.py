@@ -55,6 +55,7 @@ def sync_feed(db: Session) -> tuple[int, int]:
     if not settings.rss_enabled:
         return 0, 0
 
+    processed_dir = Path(settings.processed_dir)
     feed = feedparser.parse(settings.rss_feed_url)
 
     parsed_url = urlparse(settings.rss_feed_url)
@@ -96,7 +97,6 @@ def sync_feed(db: Session) -> tuple[int, int]:
 
         stored_name = f"{uuid.uuid4()}.rss"
         base_name = Path(stored_name).stem
-        processed_dir = Path(settings.processed_dir)
 
         try:
             page_count = render_news(
@@ -123,12 +123,14 @@ def sync_feed(db: Session) -> tuple[int, int]:
         db.add(notice)
         added += 1
 
-    # Verschwundene Eintraege beenden (WebDAV-Sync archiviert sie dann automatisch)
+    # Verschwundene Eintraege direkt loeschen (kein Archiv)
     removed = 0
-    now = datetime.utcnow()
     for ext_id, notice in existing.items():
         if ext_id not in feed_ids:
-            notice.publish_end = now
+            base = Path(notice.stored_filename).stem
+            for i in range(1, notice.page_count + 1):
+                (processed_dir / f"{base}_p{i:03d}.jpg").unlink(missing_ok=True)
+            db.delete(notice)
             removed += 1
 
     db.commit()
