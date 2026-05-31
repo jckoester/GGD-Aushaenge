@@ -7,7 +7,7 @@ Webanwendung zur Verwaltung von digitalen Aushängen (Infoscreens).
 ## Voraussetzungen
 
 - Python 3.11+
-- `poppler-utils` und `fonts-dejavu-core` (für PDF- und Text-Rendering): `apt install poppler-utils fonts-dejavu-core`
+- `poppler-utils` und `fonts-dejavu-core` (für PDF-Verarbeitung und RSS-Rendering): `apt install poppler-utils fonts-dejavu-core`
 - Zugang zu einem WebDAV-Server
 - IServ-Installation mit OAuth2/OIDC-Unterstützung
 
@@ -47,6 +47,10 @@ DATABASE_URL=sqlite:///./ggd_aushaenge.db
 UPLOAD_DIR=uploads
 PROCESSED_DIR=processed
 OIDC_REQUIRED_GROUP=infobildschirm
+
+# RSS-Feed (optional)
+RSS_FEED_URL=https://gymnasium-ditzingen.de/iserv/public/news/rss/1
+RSS_ENABLED=true
 
 # Lokaler Entwicklungsmodus – Login-Zwang deaktivieren (niemals auf dem Produktionsserver setzen!)
 # DEV_MODE=true
@@ -172,3 +176,39 @@ python sync.py
 ```
 
 Oder über die Web-Oberfläche mit dem **Sync**-Button in der Navigation.
+
+---
+
+## RSS-Feed-Sync einrichten
+
+Der RSS-Sync liest den konfigurierten Feed und legt neue Nachrichten automatisch
+als Aushänge an. Er läuft als eigenständiges Script mit eigenem Cron-Eintrag:
+
+```bash
+crontab -e
+```
+
+Folgenden Eintrag hinzufügen (Pfade anpassen):
+
+```cron
+*/15 * * * * cd /pfad/zum/projekt && /pfad/zum/venv/bin/python rss_sync.py >> /var/log/ggd-rss.log 2>&1
+```
+
+Das Intervall (hier 15 Minuten) ist unabhängig vom WebDAV-Sync (5 Minuten).
+
+Mit `RSS_ENABLED=false` in `.env` lässt sich der RSS-Sync deaktivieren, ohne
+den Cron-Eintrag entfernen zu müssen.
+
+### Was der RSS-Sync tut
+
+- Einträge im Feed, die noch nicht in der DB sind → werden als Aushang angelegt
+  und als 4K-Bild gerendert
+- Einträge, die aus dem Feed verschwunden sind → bekommen `publish_end = jetzt`;
+  der WebDAV-Sync archiviert sie beim nächsten Lauf
+- Bereits bekannte Einträge → werden ignoriert (Duplikaterkennung via `guid`)
+
+### Manuell ausführen
+
+```bash
+python rss_sync.py
+```
