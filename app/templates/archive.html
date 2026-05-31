@@ -33,12 +33,14 @@
                 {% endif %}
             </td>
             <td>
+                {% if n.source != "rss" %}
                 <button
                     onclick="republish(
                         {{ n.id }},
                         '{{ n.publish_start.isoformat() }}',
                         {{ ('\''+n.publish_end.isoformat()+'\'') if n.publish_end else 'null' }}
                     )"><i data-lucide="rotate-ccw"></i> Erneut veröffentlichen</button>
+                {% endif %}
                 <button
                     class="btn-danger"
                     onclick="deleteNotice({{ n.id }})"><i data-lucide="trash-2"></i> Löschen</button>

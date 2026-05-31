@@ -75,6 +75,11 @@ def update_notice_dates(
     notice = db.get(Notice, notice_id)
     if not notice:
         raise HTTPException(status_code=404, detail="Notice nicht gefunden.")
+    if notice.source == "rss":
+        raise HTTPException(
+            status_code=400,
+            detail="RSS-Aushänge können nicht manuell bearbeitet werden."
+        )
     if notice.archived:
         raise HTTPException(status_code=400, detail="Archivierte Notices können nicht bearbeitet werden.")
     notice.publish_start = data.publish_start
@@ -93,6 +98,11 @@ def end_notice(
     notice = db.get(Notice, notice_id)
     if not notice:
         raise HTTPException(status_code=404, detail="Notice nicht gefunden.")
+    if notice.source == "rss":
+        raise HTTPException(
+            status_code=400,
+            detail="RSS-Aushänge können nicht manuell bearbeitet werden."
+        )
     if notice.archived:
         raise HTTPException(status_code=400, detail="Archivierte Notices können nicht bearbeitet werden.")
     now = datetime.utcnow()

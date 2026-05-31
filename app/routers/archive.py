@@ -31,6 +31,11 @@ def republish(
         raise HTTPException(status_code=404, detail="Notice nicht gefunden.")
     if not notice.archived:
         raise HTTPException(status_code=400, detail="Notice ist nicht archiviert.")
+    if notice.source == "rss":
+        raise HTTPException(
+            status_code=400,
+            detail="RSS-Aushänge können nicht erneut veröffentlicht werden."
+        )
     notice.archived = False
     notice.publish_start = data.publish_start
     notice.publish_end = data.publish_end

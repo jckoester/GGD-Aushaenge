@@ -34,5 +34,7 @@ class NoticeResponse(BaseModel):
     publish_end: datetime | None
     archived: bool
     created_at: datetime
+    source: str = "user"
+    external_id: str | None = None
 
     model_config = {"from_attributes": True}

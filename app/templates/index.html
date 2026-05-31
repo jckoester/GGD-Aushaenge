@@ -73,15 +73,19 @@
                 {% endif %}
             </td>
             <td>
-                <button
-                    onclick="editNotice(
-                        {{ n.id }},
-                        '{{ n.publish_start.isoformat() }}',
-                        {{ ('\''+n.publish_end.isoformat()+'\'') if n.publish_end else 'null' }}
-                    )"><i data-lucide="pencil"></i> Zeitraum</button>
-                <button
-                    class="btn-danger btn-space-top"
-                    onclick="endNotice({{ n.id }})"><i data-lucide="square"></i> Beenden</button>
+                {% if n.source == "rss" %}
+                    <span class="badge badge-rss">RSS / automatisch</span>
+                {% else %}
+                    <button
+                        onclick="editNotice(
+                            {{ n.id }},
+                            '{{ n.publish_start.isoformat() }}',
+                            {{ ('\''+n.publish_end.isoformat()+'\'') if n.publish_end else 'null' }}
+                        )"><i data-lucide="pencil"></i> Zeitraum</button>
+                    <button
+                        class="btn-danger btn-space-top"
+                        onclick="endNotice({{ n.id }})"><i data-lucide="square"></i> Beenden</button>
+                {% endif %}
             </td>
         </tr>
         {% else %}
