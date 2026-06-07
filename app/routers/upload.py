@@ -1,6 +1,6 @@
 import uuid
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 from app.config import get_settings
@@ -105,9 +105,9 @@ def end_notice(
         )
     if notice.archived:
         raise HTTPException(status_code=400, detail="Archivierte Notices können nicht bearbeitet werden.")
-    now = datetime.utcnow()
-    notice.publish_start = now
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     notice.publish_end = now
+    notice.archived = True
     db.commit()
     db.refresh(notice)
     return notice
