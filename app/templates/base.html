@@ -134,7 +134,7 @@ document.getElementById("modal-submit").addEventListener("click", async function
         await showAlert("Bitte ein Enddatum angeben oder 'Dauerhaft' wählen.");
         return;
     }
-    const toIso = d => d ? d.toISOString().slice(0, 19) : null;
+    const toIso = d => { if (!d) return null; const p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; };
     if (_modalCallback) _modalCallback(toIso(startVal), toIso(endVal));
     closeModal();
 });

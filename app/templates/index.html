@@ -135,7 +135,7 @@ document.getElementById("upload-btn").addEventListener("click", async function (
     if (!startDate) { await showAlert("Bitte ein Startdatum angeben."); return; }
     if (!permanent && !endDate) { await showAlert("Bitte ein Enddatum angeben oder 'Dauerhaft' wählen."); return; }
 
-    const toIso = d => d ? d.toISOString().slice(0, 19) : null;
+    const toIso = d => { if (!d) return null; const p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; };
 
     const fd = new FormData();
     fd.append("file", fileInput.files[0]);
